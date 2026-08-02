@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth-api";
+import { requireAuth } from "@/lib/mock-auth";
 import { CategorySchema } from "@/lib/validations";
 import { findManyCategoriesWithCount, createCategory, findUniqueCategory } from "@/lib/services/categories";
 

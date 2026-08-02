@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth-api";
+import { requireAuth } from "@/lib/mock-auth";
 import { PageSchema } from "@/lib/validations";
 import { findManyPages, createPage, findUniquePage } from "@/lib/services/pages";
 

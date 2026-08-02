@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, requireSuperAdmin } from "@/lib/auth-api";
+import { requireAuth, requireSuperAdmin } from "@/lib/mock-auth";
 import { UserSchema } from "@/lib/validations";
 import bcrypt from "bcryptjs";
 import { findUniqueUser, findUniqueUserSafe, updateUser, deleteUser, countUsers } from "@/lib/services/users";
@@ -91,10 +91,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireSuperAdmin();
+    const currentUser = await requireSuperAdmin();
     const { id } = await params;
 
-    if (session.user.id === id) {
+    if (currentUser.id === id) {
       return NextResponse.json(
         { error: "Tidak bisa menghapus akun sendiri" },
         { status: 400 }

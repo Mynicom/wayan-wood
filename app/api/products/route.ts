@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth-api";
+import { requireAuth } from "@/lib/mock-auth";
 import { ProductSchema } from "@/lib/validations";
 import { findManyProducts, countProducts, createProduct } from "@/lib/services/products";
 

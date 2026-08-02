@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Menu, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,11 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
-interface SessionUser {
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-  role?: string;
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
 }
 
 interface HeaderProps {
@@ -25,8 +26,20 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const { data: session } = useSession();
-  const user = session?.user as SessionUser | undefined;
+  const router = useRouter();
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    const match = document.cookie.match(/auth-user=([^;]+)/);
+    if (match) {
+      try {
+        setUser(JSON.parse(atob(match[1])));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
+
   const userName = user?.name || "Admin";
   const userRole = user?.role || "Admin";
   const initials = userName
@@ -35,6 +48,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/panel/login");
+    router.refresh();
+  };
 
   return (
     <header className="h-16 bg-white border-b border-[#E7E3DD] flex items-center justify-between px-4 lg:px-8 sticky top-0 z-20">
@@ -68,7 +87,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => signOut({ callbackUrl: "/panel/login" })}
+              onClick={handleLogout}
             >
               Logout
             </DropdownMenuItem>

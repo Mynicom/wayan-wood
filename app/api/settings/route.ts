@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/auth-api";
+import { requireSuperAdmin } from "@/lib/mock-auth";
 import { SettingsSchema } from "@/lib/validations";
 import { getSettings, updateSettings } from "@/lib/services/settings";
 

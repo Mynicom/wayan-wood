@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, requireSuperAdmin } from "@/lib/auth-api";
+import { requireAuth, requireSuperAdmin } from "@/lib/mock-auth";
 import { UserSchema } from "@/lib/validations";
 import bcrypt from "bcryptjs";
 import { findManyUsers, createUser, findUniqueUser } from "@/lib/services/users";

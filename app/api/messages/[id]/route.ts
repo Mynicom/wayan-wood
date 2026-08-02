@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth-api";
+import { requireAuth } from "@/lib/mock-auth";
 import { findUniqueMessage, updateMessage, deleteMessage } from "@/lib/services/messages";
 
 export async function GET(

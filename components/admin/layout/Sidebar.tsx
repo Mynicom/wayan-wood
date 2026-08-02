@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Package,
@@ -37,6 +37,7 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (open) {
@@ -48,6 +49,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/panel/login");
+    router.refresh();
+  };
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -102,7 +109,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       <div className="px-3 pb-4">
         <Separator className="bg-white/10 mb-4" />
         <button
-          onClick={() => signOut({ callbackUrl: "/panel/login" })}
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[0.9375rem] font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-colors w-full cursor-pointer"
         >
           <LogOut className="w-5 h-5" />

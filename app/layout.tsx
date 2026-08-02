@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import ClientProviders from "@/components/cart/ClientProviders";
-import AuthProviders from "@/components/auth/Providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -107,9 +106,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <AuthProviders>
           <ClientProviders>{children}</ClientProviders>
-        </AuthProviders>
       </body>
     </html>
   );
