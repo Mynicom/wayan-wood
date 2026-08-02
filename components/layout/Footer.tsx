@@ -1,0 +1,304 @@
+"use client";
+
+import { useState, useEffect, lazy, Suspense } from "react";
+import Link from "next/link";
+import Image from "next/image";
+
+const ContentModal = lazy(() => import("@/components/ui/ContentModal"));
+
+const shopLinks = [
+  { label: "Categories", href: "/#categories" },
+  { label: "All Product", href: "/collections" },
+  { label: "Best Seller", href: "/#best-sellers" },
+  { label: "New Arrivals", href: "/#hero" },
+];
+
+const infoLinks: { label: string; href?: string; modalSlug: string }[] = [
+  { label: "About Us", href: "/about", modalSlug: "about-us" },
+  { label: "Care Guide", modalSlug: "care-guide" },
+  { label: "FAQ", modalSlug: "faq" },
+];
+
+const copyrightLinks = [
+  { label: "Privacy Policy", modalSlug: "privacy-policy" },
+  { label: "Terms & Conditions", modalSlug: "terms-conditions" },
+];
+
+interface WebsiteSettings {
+  websiteName: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  youtube: string;
+  googleMaps: string;
+  copyright: string;
+}
+
+interface PageData {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+}
+
+const defaultSettings: WebsiteSettings = {
+  websiteName: "Wayan Wood Work",
+  email: "",
+  phone: "",
+  whatsapp: "",
+  address: "",
+  instagram: "",
+  facebook: "",
+  tiktok: "",
+  youtube: "",
+  googleMaps: "",
+  copyright: "",
+};
+
+const socialIcons: Record<string, React.JSX.Element> = {
+  facebook: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  ),
+  instagram: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+    </svg>
+  ),
+  tiktok: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.16z" />
+    </svg>
+  ),
+  youtube: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  ),
+};
+
+let cachedSettings: WebsiteSettings | null = null;
+let cachedPages: PageData[] | null = null;
+
+export default function Footer() {
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [settings, setSettings] = useState<WebsiteSettings>(cachedSettings ?? defaultSettings);
+  const [pages, setPages] = useState<PageData[]>(cachedPages ?? []);
+
+  useEffect(() => {
+    if (!cachedSettings) {
+      fetch("/api/settings")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && !data.error) {
+            cachedSettings = data;
+            setSettings(data);
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (!cachedPages) {
+      fetch("/api/pages")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            cachedPages = data;
+            setPages(data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  const modalData = activeModal ? pages.find((p) => p.slug === activeModal) : null;
+
+  const socialLinks = [
+    { name: "Facebook", url: settings.facebook, icon: socialIcons.facebook },
+    { name: "Instagram", url: settings.instagram, icon: socialIcons.instagram },
+    { name: "TikTok", url: settings.tiktok, icon: socialIcons.tiktok },
+    { name: "YouTube", url: settings.youtube, icon: socialIcons.youtube },
+  ].filter((link) => link.url && link.url !== "");
+
+  return (
+    <>
+      <footer id="contact" className="bg-[#3B2A1F] text-white">
+        <div className="h-1 bg-gradient-to-r from-[#C89B5B] via-[#B08A4A] to-[#C89B5B]" />
+
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            {/* Logo, Description & Social */}
+            <div className="lg:col-span-1">
+              <Link href="/" className="flex items-center gap-3 mb-4">
+                <Image src="/logo.png" alt="Wayan Wood Work" width={48} height={48} className="rounded-full" />
+              </Link>
+              <p className="font-serif text-[1rem] tracking-wide mb-4">WAYAN WOOD WORK</p>
+              <p className="text-white/60 text-[0.8125rem] leading-relaxed mb-6 max-w-xs">
+                Handcrafted wooden furniture from Bali. Each piece carries its own distinct character.
+              </p>
+
+              {socialLinks.length > 0 && (
+                <div className="flex items-center gap-3">
+                  {socialLinks.map((social) => (
+                    <a
+                      key={social.name}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-[#C89B5B] hover:border-[#C89B5B] hover:text-white transition-all duration-300"
+                      aria-label={social.name}
+                    >
+                      {social.icon}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="font-semibold text-[0.875rem] md:text-[1rem] mb-6">
+                Quick Links
+              </h3>
+              <ul className="space-y-3">
+                {shopLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-white/60 hover:text-[#C89B5B] text-[0.875rem] transition-colors duration-300"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Information */}
+            <div>
+              <h3 className="font-semibold text-[0.875rem] md:text-[1rem] mb-6">
+                Information
+              </h3>
+              <ul className="space-y-3">
+                {infoLinks.map((link) => (
+                  <li key={link.label}>
+                    {link.href ? (
+                      <Link
+                        href={link.href}
+                        className="text-white/60 hover:text-[#C89B5B] text-[0.875rem] transition-colors duration-300"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => setActiveModal(link.modalSlug)}
+                        className="text-white/60 hover:text-[#C89B5B] text-[0.875rem] transition-colors duration-300 cursor-pointer"
+                      >
+                        {link.label}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact Us */}
+            <div>
+              <h3 className="font-semibold text-[0.875rem] md:text-[1rem] mb-6">
+                Contact Us
+              </h3>
+              <ul className="space-y-4 text-[0.8125rem] text-white/60">
+                {settings.address && (
+                  <li>
+                    <a
+                      href={settings.googleMaps || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-3 hover:text-[#C89B5B] transition-colors duration-300 group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C89B5B]/20 transition-colors duration-300">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <span className="leading-relaxed">{settings.address}</span>
+                    </a>
+                  </li>
+                )}
+                {settings.whatsapp && (
+                  <li>
+                    <a
+                      href={`https://wa.me/${settings.whatsapp}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 hover:text-[#C89B5B] transition-colors duration-300 group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C89B5B]/20 transition-colors duration-300">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      </div>
+                      <span>{settings.phone}</span>
+                    </a>
+                  </li>
+                )}
+                {settings.email && (
+                  <li>
+                    <a
+                      href={`mailto:${settings.email}`}
+                      className="flex items-center gap-3 hover:text-[#C89B5B] transition-colors duration-300 group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C89B5B]/20 transition-colors duration-300">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <span>{settings.email}</span>
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="border-t border-white/10">
+          <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-[0.8125rem] text-white/40">
+              &copy; {new Date().getFullYear()} {settings.copyright || "Wayan Wood Work. All rights reserved."}
+            </p>
+            <div className="flex items-center gap-6 text-[0.8125rem] text-white/40">
+              {copyrightLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => setActiveModal(link.modalSlug)}
+                  className="hover:text-white/70 transition-colors cursor-pointer"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {modalData && (
+        <Suspense fallback={null}>
+          <ContentModal
+            isOpen={!!activeModal}
+            onClose={() => setActiveModal(null)}
+            title={modalData.title}
+            content={modalData.content}
+          />
+        </Suspense>
+      )}
+    </>
+  );
+}
